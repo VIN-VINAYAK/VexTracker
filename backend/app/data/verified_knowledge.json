@@ -1,0 +1,14 @@
+[
+  {
+    "source": "WHO childhood immunization guidance",
+    "content": "Routine childhood vaccination is a preventive public health measure and should follow national schedules and the child’s age-based needs. Vaccines are generally timed according to age and risk factors."
+  },
+  {
+    "source": "UNICEF immunization overview",
+    "content": "Vaccination schedules are designed to protect children against vaccine-preventable diseases and are usually planned in early infancy and childhood."
+  },
+  {
+    "source": "General vaccine schedule knowledge",
+    "content": "A vaccine dose that has already been administered is marked as completed in the patient record, while a future due date is marked as upcoming and a missed or overdue date is flagged as overdue."
+  }
+]
