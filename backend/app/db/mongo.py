@@ -17,6 +17,8 @@ async def init_db() -> None:
         _client = AsyncIOMotorClient(MONGODB_URI)
         database = _client[MONGODB_DB_NAME]
         await init_beanie(database=database, document_models=DOCUMENT_MODELS)
+        from app.db.seed import seed_mongodb_if_empty
+        await seed_mongodb_if_empty()
     except Exception as exc:  # pragma: no cover - depends on local Mongo availability
         _client = None
         print(f"MongoDB not available at startup; continuing without DB init: {exc}")

@@ -6,20 +6,18 @@ from typing import Any
 import requests
 from fastapi import HTTPException, status
 
-from app.core.config import GROQ_API_KEY
+from app.core.config import GROQ_API_KEY, GROQ_MODEL
 
 KNOWLEDGE_PATH = Path(__file__).resolve().parent.parent / "data" / "verified_knowledge.json"
 
-SAFETY_PATTERNS = [
-    "diagnosis",
-    "diagnose",
-    "treat",
-    "treatment",
-    "prescribe",
-    "medication",
-    "doctor",
-    "medical advice",
-    "side effects",
+DIAGNOSIS_PATTERNS = [
+    "diagnose me",
+    "diagnose my child",
+    "prescribe me",
+    "prescribe antibiotics",
+    "cancer treatment",
+    "cure disease",
+    "surgery",
 ]
 
 
@@ -37,7 +35,7 @@ def _load_knowledge() -> list[dict[str, Any]]:
 
 def classify_question(question: str) -> str:
     q = question.strip().lower()
-    if any(word in q for word in ["vaccine", "vaccination", "immunization", "dose", "schedule", "due date", "booster"]):
+    if any(word in q for word in ["vaccine", "vaccination", "immunization", "dose", "schedule", "due date", "booster", "shot", "fever", "reaction", "bcg", "dtap", "mmr", "polio", "rotavirus"]):
         return "vaccine"
     return "general"
 
@@ -45,54 +43,76 @@ def classify_question(question: str) -> str:
 def retrieve_context(question: str, limit: int = 3) -> list[dict[str, Any]]:
     knowledge = _load_knowledge()
     q = question.lower()
+    stopwords = {"what", "is", "a", "the", "does", "do", "of", "and", "or", "in", "to", "for", "with", "can", "should", "my", "child", "baby", "usually", "include"}
+    query_tokens = [w for w in re.findall(r"[a-z0-9]+", q) if w not in stopwords]
+    if not query_tokens:
+        query_tokens = re.findall(r"[a-z0-9]+", q)
+
     scored: list[tuple[float, dict[str, Any]]] = []
 
     for item in knowledge:
         text = " ".join(str(v).lower() for v in item.values())
         score = 0.0
-        for token in re.findall(r"[a-z0-9]+", q):
+        for token in query_tokens:
             if token in text:
-                score += 1.0
+                # boost exact word boundary match
+                score += 2.0 if re.search(r"\b" + re.escape(token) + r"\b", text) else 1.0
         if score > 0:
             scored.append((score, item))
 
     scored.sort(key=lambda x: x[0], reverse=True)
+    if not scored and knowledge:
+        # Fallback to general guidance if nothing specifically scored
+        return knowledge[:limit]
     return [item for _, item in scored[:limit]]
 
 
 def is_out_of_scope(question: str) -> bool:
     lowered = question.lower()
-    if any(keyword in lowered for keyword in ["diagnose", "diagnosis", "prescribe", "treatment", "side effect", "medication"]):
+    if any(pat in lowered for pat in DIAGNOSIS_PATTERNS):
         return True
     return False
 
 
-def _call_groq(prompt: str) -> str:
+def _call_groq(prompt: str) -> str | None:
     if not GROQ_API_KEY:
-        return "I don't have verified information on that."
+        return None
 
-    try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "llama-3.3-70b-versatile",
-                "messages": [
-                    {"role": "system", "content": "Answer only from the provided verified context. If the question is outside the scope, refuse and say: I don't have verified information on that."},
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": 0.2,
-            },
-            timeout=30,
-        )
-        response.raise_for_status()
-        payload = response.json()
-        return payload["choices"][0]["message"]["content"].strip()
-    except Exception:
-        return "I don't have verified information on that."
+    # Try preferred model first, then fallbacks
+    models_to_try = [GROQ_MODEL, "openai/gpt-oss-20b", "qwen/qwen3.8-27b", "openai/gpt-oss-120b"]
+    for model in dict.fromkeys(models_to_try):
+        try:
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are VexTracker AI Clinical Assistant, an evidence-based pediatric immunization expert. "
+                                "Answer the question thoroughly, clearly, and empathetically using the provided verified clinical guidance. "
+                                "Be concise, friendly, and structured. Always advise caregivers to contact their pediatrician if they observe acute warning signs."
+                            ),
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    "temperature": 0.2,
+                },
+                timeout=15,
+            )
+            if response.status_code == 200:
+                payload = response.json()
+                content = payload["choices"][0]["message"]["content"].strip()
+                if content:
+                    return content
+        except Exception:
+            continue
+    return None
 
 
 def ask_assistant(question: str) -> dict[str, Any]:
@@ -101,8 +121,8 @@ def ask_assistant(question: str) -> dict[str, Any]:
 
     if is_out_of_scope(question):
         return {
-            "answer": "I don't have verified information on that.",
-            "source_snippet": "Safety filter: diagnosis/treatment claims are out of scope.",
+            "answer": "I don't have verified information on that. I am an immunization educational assistant and cannot diagnose conditions, recommend surgical procedures, or prescribe medications. Please consult your pediatrician.",
+            "source_snippet": "Safety filter: individual diagnosis and prescription requests are out of scope.",
             "category": "out_of_scope",
         }
 
@@ -115,20 +135,25 @@ def ask_assistant(question: str) -> dict[str, Any]:
         }
 
     context_text = "\n\n".join(
-        f"Source: {item.get('source', 'local_knowledge')}\n{item.get('content', str(item))}"
+        f"Source: {item.get('source', 'local_knowledge')}\nTopic: {item.get('topic', '')}\nGuidance: {item.get('content', str(item))}"
         for item in context
     )
     prompt = (
-        "Use only the following verified context to answer the user's question. "
-        "Do not add any clinical claims beyond the given source material. "
-        "If the answer is not supported by the context, say: I don't have verified information on that.\n\n"
-        f"Context:\n{context_text}\n\nQuestion: {question}"
+        f"Verified Clinical Guidance:\n{context_text}\n\n"
+        f"User Question: {question}\n\n"
+        "Provide a clear, helpful response based on the clinical guidance above:"
     )
 
     answer = _call_groq(prompt)
+    if not answer:
+        # High quality offline / fallback synthesis from the most relevant verified knowledge
+        primary = context[0]
+        answer = f"{primary.get('content', '')}\n\n(Source: {primary.get('source', 'WHO/CDC Guidelines')})"
+
     source_snippet = context[0].get("content", str(context[0]))
     return {
         "answer": answer,
-        "source_snippet": source_snippet,
+        "source_snippet": f"{context[0].get('source', 'Verified Source')}: {source_snippet[:200]}...",
         "category": classify_question(question),
     }
+

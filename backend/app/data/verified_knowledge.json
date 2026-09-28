@@ -1,14 +1,87 @@
 [
   {
-    "source": "WHO childhood immunization guidance",
-    "content": "Routine childhood vaccination is a preventive public health measure and should follow national schedules and the child’s age-based needs. Vaccines are generally timed according to age and risk factors."
+    "topic": "Routine Schedule Principles",
+    "source": "WHO & CDC Pediatric Immunization Framework",
+    "content": "Routine childhood vaccination is the most effective preventive public health measure against severe infectious diseases. Schedules are carefully timed based on when maternal antibodies wane and when an infant's developing immune system can safely mount a robust, protective response."
   },
   {
-    "source": "UNICEF immunization overview",
-    "content": "Vaccination schedules are designed to protect children against vaccine-preventable diseases and are usually planned in early infancy and childhood."
+    "topic": "Catch-up & Missed Doses",
+    "source": "CDC General Best Practice Guidelines for Immunization",
+    "content": "If a child misses a scheduled dose or is delayed, it is almost never necessary to restart the entire vaccine series from dose 1. Instead, follow catch-up scheduling by administering the remaining needed doses while respecting the minimum recommended intervals between doses."
   },
   {
-    "source": "General vaccine schedule knowledge",
-    "content": "A vaccine dose that has already been administered is marked as completed in the patient record, while a future due date is marked as upcoming and a missed or overdue date is flagged as overdue."
+    "topic": "Mild Illness & Fever",
+    "source": "American Academy of Pediatrics (AAP) Clinical Practice Guidance",
+    "content": "Mild illnesses—such as a common cold, low-grade temperature (< 38°C or 100.4°F), upper respiratory congestion, ear infection, or mild diarrhea—are NOT contraindications to routine vaccination. Vaccines should still be administered on schedule unless the child is suffering from a moderate-to-severe acute illness with high fever."
+  },
+  {
+    "topic": "Common Post-Vaccine Reactions",
+    "source": "CDC Vaccine Safety Guidelines",
+    "content": "Mild side effects after childhood immunizations are normal, temporary signs that the child's body is building immunity. These include mild soreness, redness, or a small lump at the injection site, low-grade fever, and temporary sleepiness or fussiness for 24 to 48 hours."
+  },
+  {
+    "topic": "Comfort & Symptom Care",
+    "source": "WHO Caregiver Guidance for Post-Immunization Care",
+    "content": "To soothe an infant after shots, apply a clean, cool, damp cloth over the sore injection site. Offer extra fluids and comfort nursing. Never give aspirin to infants or children. Pediatric paracetamol (acetaminophen) or ibuprofen may be given if advised by a healthcare provider for pain or fever discomfort."
+  },
+  {
+    "topic": "When to Contact a Doctor",
+    "source": "AAP Emergency Pediatric Red Flags",
+    "content": "Seek immediate medical care if a child develops severe allergic signs within minutes (difficulty breathing, facial swelling, generalized hives), persistent inconsolable crying for more than 3 hours, extreme lethargy or unresponsiveness, or a high fever above 39°C (102.2°F)."
+  },
+  {
+    "topic": "BCG Vaccine",
+    "source": "WHO Immunization Position Paper on BCG",
+    "content": "BCG (Bacillus Calmette–Guérin) is administered as a single intradermal dose at birth or in early infancy. It protects infants against severe, life-threatening forms of tuberculosis, including tuberculous meningitis and disseminated miliary TB. A small raised papule or scar usually forms within 6 to 12 weeks, which is completely normal."
+  },
+  {
+    "topic": "Hepatitis B Vaccine",
+    "source": "CDC Hepatitis B Advisory Committee Guidelines",
+    "content": "Hepatitis B vaccine is typically started within 24 hours of birth to protect against perinatal transmission. The routine series consists of 3 doses (birth, 1–2 months, and 6–18 months). It provides over 95% protection against hepatitis B chronic infection, cirrhosis, and liver cancer."
+  },
+  {
+    "topic": "DTaP Vaccine",
+    "source": "CDC DTaP Recommendations for Children",
+    "content": "DTaP protects against Diphtheria (bacterial airway toxin), Tetanus (lockjaw muscle spasms), and Pertussis (severe whooping cough). The childhood series includes 5 doses given at 2 months, 4 months, 6 months, 15–18 months, and a final booster at 4–6 years of age."
+  },
+  {
+    "topic": "Polio Vaccine (IPV)",
+    "source": "Global Polio Eradication Initiative (GPEI) & WHO",
+    "content": "Inactivated Poliovirus Vaccine (IPV) protects against poliovirus, which can infect the spinal cord and cause irreversible paralysis. Routine schedules provide doses at 2 months, 4 months, 6–18 months, and 4–6 years. IPV does not cause vaccine-derived paralysis and has an outstanding safety record."
+  },
+  {
+    "topic": "Hib Vaccine",
+    "source": "CDC Haemophilus influenzae type b Guidelines",
+    "content": "The Hib vaccine prevents Haemophilus influenzae type b, a severe bacterial disease that causes life-threatening meningitis, epiglottitis (severe airway swelling), and pneumonia in children under 5 years old. Doses are given at 2, 4, 6, and 12–15 months."
+  },
+  {
+    "topic": "Pneumococcal Conjugate Vaccine (PCV13 / PCV15)",
+    "source": "WHO SAGE & CDC Advisory Committee",
+    "content": "PCV protects against Streptococcus pneumoniae bacteria responsible for bacteremia, bacterial pneumonia, meningitis, and painful middle ear infections. Routine doses are administered at 2, 4, 6 months, followed by a booster at 12–15 months."
+  },
+  {
+    "topic": "Rotavirus Vaccine (RV)",
+    "source": "WHO Rotavirus Position Paper",
+    "content": "Rotavirus vaccine is given orally (liquid drops in the mouth, not an injection) at 2 and 4 months (or 6 months depending on the 2-dose or 3-dose brand). It protects infants against severe acute dehydrating diarrhea and vomiting, which is a major cause of pediatric hospitalizations worldwide."
+  },
+  {
+    "topic": "MMR Vaccine & Safety",
+    "source": "WHO & American Academy of Pediatrics",
+    "content": "MMR protects against Measles, Mumps, and Rubella. The first dose is given at 12–15 months, and the second booster at 4–6 years. Measles can cause severe pneumonia and encephalitis. Rigorous international scientific studies across millions of children have repeatedly confirmed that the MMR vaccine does NOT cause autism."
+  },
+  {
+    "topic": "Varicella (Chickenpox) Vaccine",
+    "source": "CDC Varicella Immunization Guidance",
+    "content": "The Varicella vaccine protects against chickenpox and its complications, including severe bacterial skin infections, pneumonia, and shingles later in life. It is administered as a 2-dose series: first dose at 12–15 months, second booster at 4–6 years."
+  },
+  {
+    "topic": "Combination Vaccines",
+    "source": "CDC Guidelines for Combination Pediatric Vaccines",
+    "content": "Combination vaccines (such as DTaP-IPV-HepB or DTaP-IPV-Hib) combine multiple vaccines into a single injection. They provide the exact same high level of immune protection while dramatically reducing the number of needle pokes, tears, and clinic visits for infants and parents."
+  },
+  {
+    "topic": "Vaccine Statuses and Priority Engine",
+    "source": "VexTracker Clinical Scheduling Protocol",
+    "content": "In VexTracker AI: A vaccine dose already administered is recorded as 'Completed' with doctor verification. An upcoming dose scheduled within 7 days is prioritized as 'High' urgency. Doses that pass their due date without administration are flagged as 'Overdue' with 'Critical' priority."
   }
 ]

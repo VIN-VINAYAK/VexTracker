@@ -78,19 +78,31 @@ async def get_child_timeline(child_id: PydanticObjectId, current_user: CurrentUs
 
         items = []
         for vaccine in vaccines:
-            due_date = calculateDueDate(dob, 6 if vaccine.name.lower().startswith("dpt") else 12)
+            # Deterministic milestone spacing based on vaccine
+            v_name = vaccine.name.lower()
+            months = 0 if "bcg" in v_name or "hepb" in v_name else (2 if "dtap" in v_name or "ipv" in v_name or "rotavirus" in v_name else 12)
+            due_date = calculateDueDate(dob, months)
             record = administered_lookup.get(vaccine.id)
             administered_date = record.administered_date.date() if record and record.administered_date else None
             vaccine_status = getVaccineStatus(due_date, administered_date=administered_date, as_of=date.today())
             priority = calculatePriority(vaccine_status, due_date=due_date, as_of=date.today())
+            
+            from app.auth.security import create_record_qr_token
+            qr_tok = create_record_qr_token(str(record.id)) if record else create_record_qr_token(str(child.id))
+
             items.append(
                 {
+                    "record_id": str(record.id) if record else None,
+                    "vaccine_id": str(vaccine.id),
                     "vaccine_name": vaccine.name,
+                    "disease_target": vaccine.disease_target,
                     "due_date": due_date.isoformat(),
                     "status": vaccine_status,
                     "priority": priority,
-                    "dose_number": record.dose_number if record else None,
+                    "dose_number": record.dose_number if record else 1,
                     "administered_date": administered_date.isoformat() if administered_date else None,
+                    "notes": record.notes if record else None,
+                    "qr_token": qr_tok,
                 }
             )
 
@@ -101,3 +113,40 @@ async def get_child_timeline(child_id: PydanticObjectId, current_user: CurrentUs
         if target is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Child not found")
         return {"child_id": str(child_id), "items": build_memory_timeline(str(child_id))}
+
+
+@router.get("/children/{child_id}/reminders")
+async def get_child_reminders(child_id: PydanticObjectId, current_user: CurrentUser):
+    from app.services.notification_engine import NotificationEngine
+    engine = NotificationEngine()
+
+    try:
+        child = await Child.get(child_id)
+        if child is None or not user_is_guardian(current_user.id, child):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Child not found")
+
+        records = await VaccinationRecord.find(VaccinationRecord.child_id == child.id).to_list()
+        vaccines = await Vaccine.find_all().to_list()
+        administered_ids = {r.vaccine_id for r in records if r.administered_date}
+        dob = child.date_of_birth.date()
+
+        reminders = []
+        for vaccine in vaccines:
+            if vaccine.id in administered_ids:
+                continue
+            v_name = vaccine.name.lower()
+            months = 0 if "bcg" in v_name or "hepb" in v_name else (2 if "dtap" in v_name or "ipv" in v_name else 12)
+            due_date = calculateDueDate(dob, months)
+            plan = engine.generate_for_child(due_date, as_of=date.today())
+            reminders.append({
+                "vaccine_name": vaccine.name,
+                "due_date": due_date.isoformat(),
+                "reminder_type": plan.get("reminder_type"),
+                "message": plan.get("message"),
+                "scheduled": plan.get("scheduled"),
+                "days_remaining": (due_date - date.today()).days,
+            })
+        return {"child_id": str(child_id), "reminders": reminders}
+    except Exception:
+        return {"child_id": str(child_id), "reminders": []}
+

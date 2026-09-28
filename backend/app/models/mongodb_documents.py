@@ -1,11 +1,9 @@
-"""Beanie (MongoDB) document models for VexTracker AI."""
-from __future__ import annotations
-
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
+from pymongo import IndexModel
 
 
 class User(Document):
@@ -15,14 +13,14 @@ class User(Document):
     password_hash: str
     role: Literal["parent", "doctor", "admin"] = "parent"
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Settings:
         name = "users"
         indexes = [
-            [("email", 1), {"unique": True}],
-            [("role", 1)],
+            IndexModel([("email", 1)], unique=True),
+            IndexModel([("role", 1)]),
         ]
 
 
@@ -33,14 +31,14 @@ class Child(Document):
     date_of_birth: datetime
     gender: str | None = None
     notes: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Settings:
         name = "children"
         indexes = [
-            [("guardians", 1)],
-            [("created_at", -1)],
+            IndexModel([("guardians", 1)]),
+            IndexModel([("created_at", -1)]),
         ]
 
 
@@ -52,7 +50,7 @@ class Vaccine(Document):
 
     class Settings:
         name = "vaccines"
-        indexes = [[("name", 1), {"unique": True}]]
+        indexes = [IndexModel([("name", 1)], unique=True)]
 
 
 class VaccinationRecord(Document):
@@ -71,8 +69,8 @@ class VaccinationRecord(Document):
     class Settings:
         name = "vaccination_records"
         indexes = [
-            [("child_id", 1)],
-            [("vaccine_id", 1)],
+            IndexModel([("child_id", 1)]),
+            IndexModel([("vaccine_id", 1)]),
         ]
 
 
@@ -88,8 +86,8 @@ class VaccinationSchedule(Document):
     class Settings:
         name = "vaccination_schedules"
         indexes = [
-            [("child_id", 1)],
-            [("vaccine_id", 1)],
+            IndexModel([("child_id", 1)]),
+            IndexModel([("vaccine_id", 1)]),
         ]
 
 
@@ -103,7 +101,7 @@ class HealthcareCenter(Document):
 
     class Settings:
         name = "healthcare_centers"
-        indexes = [[("name", 1), {"unique": True}]]
+        indexes = [IndexModel([("name", 1)], unique=True)]
 
 
 class Inventory(Document):
@@ -115,13 +113,13 @@ class Inventory(Document):
     expiry_date: datetime | None = None
     location: str | None = None
     consumption_rate: float = 0.0
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Settings:
         name = "inventory"
         indexes = [
-            [("vaccine_id", 1)],
-            [("expiry_date", 1)],
+            IndexModel([("vaccine_id", 1)]),
+            IndexModel([("expiry_date", 1)]),
         ]
 
 
@@ -129,15 +127,15 @@ class Notification(Document):
     child_id: PydanticObjectId
     user_id: PydanticObjectId | None = None
     type: str = "reminder"
-    sent_at: datetime = Field(default_factory=datetime.utcnow)
+    sent_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     status: Literal["queued", "sent", "failed"] = "queued"
     message: str | None = None
 
     class Settings:
         name = "notifications"
         indexes = [
-            [("child_id", 1)],
-            [("status", 1)],
+            IndexModel([("child_id", 1)]),
+            IndexModel([("status", 1)]),
         ]
 
 
@@ -145,12 +143,13 @@ class AuditLog(Document):
     user_id: PydanticObjectId | None = None
     action: str
     target: str | None = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     details: str | None = None
 
     class Settings:
         name = "audit_logs"
         indexes = [
-            [("user_id", 1)],
-            [("timestamp", -1)],
+            IndexModel([("user_id", 1)]),
+            IndexModel([("timestamp", -1)]),
         ]
+
