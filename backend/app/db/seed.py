@@ -13,6 +13,27 @@ from app.models import (
 async def seed_mongodb_if_empty() -> None:
     user_count = await User.count()
     if user_count > 0:
+        demo_users = [
+            ("parent@vextracker.ai", "+1-555-0101", "+91 98765 43210"),
+            ("doctor@vextracker.ai", "+1-555-0102", "+91 98765 43211"),
+            ("admin@vextracker.ai", "+1-555-0103", "+91 98765 43212"),
+        ]
+        for email, old_phone, indian_phone in demo_users:
+            user = await User.find_one(User.email == email)
+            if user and user.phone == old_phone:
+                user.phone = indian_phone
+                await user.save()
+
+        demo_centers = [
+            ("MCHC-01", "+1-555-0120", "+91 80 4000 0120"),
+            ("SPH-02", "+1-555-0145", "+91 22 4000 0145"),
+            ("CHCF-03", "+1-555-0189", "+91 11 4000 0189"),
+        ]
+        for code, old_phone, indian_phone in demo_centers:
+            center = await HealthcareCenter.find_one(HealthcareCenter.code == code)
+            if center and center.phone == old_phone:
+                center.phone = indian_phone
+                await center.save()
         return
 
     print("Seeding initial MongoDB clinical data...")
@@ -22,7 +43,7 @@ async def seed_mongodb_if_empty() -> None:
     parent = User(
         full_name="Maya Patel",
         email="parent@vextracker.ai",
-        phone="+1-555-0101",
+        phone="+91 98765 43210",
         password_hash=get_password_hash("password123"),
         role="parent",
         is_active=True,
@@ -32,7 +53,7 @@ async def seed_mongodb_if_empty() -> None:
     doctor = User(
         full_name="Dr. Priya Shah, MD",
         email="doctor@vextracker.ai",
-        phone="+1-555-0102",
+        phone="+91 98765 43211",
         password_hash=get_password_hash("password123"),
         role="doctor",
         is_active=True,
@@ -42,7 +63,7 @@ async def seed_mongodb_if_empty() -> None:
     admin = User(
         full_name="Alicia Grant",
         email="admin@vextracker.ai",
-        phone="+1-555-0103",
+        phone="+91 98765 43212",
         password_hash=get_password_hash("password123"),
         role="admin",
         is_active=True,
@@ -54,7 +75,7 @@ async def seed_mongodb_if_empty() -> None:
         name="Metro Child Health Clinic",
         code="MCHC-01",
         address="450 Health Parkway, Suite 200, Metro City",
-        phone="+1-555-0120",
+        phone="+91 80 4000 0120",
         email="clinic@metrohealth.example",
         contact_person="Dr. Priya Shah",
     )
@@ -64,7 +85,7 @@ async def seed_mongodb_if_empty() -> None:
         name="Sunrise Pediatric Hospital",
         code="SPH-02",
         address="880 Sunrise Blvd, Metro City",
-        phone="+1-555-0145",
+        phone="+91 22 4000 0145",
         email="pediatrics@sunrisehospital.example",
         contact_person="Dr. Marcus Vance",
     )
@@ -74,7 +95,7 @@ async def seed_mongodb_if_empty() -> None:
         name="Community Health Center #4",
         code="CHCF-03",
         address="12 Central Square, Metro City",
-        phone="+1-555-0189",
+        phone="+91 11 4000 0189",
         email="info@communityhealth4.example",
         contact_person="Nurse Elena Rostova",
     )

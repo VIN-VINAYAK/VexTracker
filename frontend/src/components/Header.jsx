@@ -1,7 +1,7 @@
-import { Activity, Bot, ChevronDown, LogOut, Shield, Stethoscope, User, Users } from 'lucide-react'
+import { Activity, Bot, ChevronDown, LogOut, Shield, Stethoscope, Sun, Moon, User, Users } from 'lucide-react'
 import { useState } from 'react'
 
-export function Header({ user, onLogout, onSwitchDemo, onOpenAI }) {
+export function Header({ user, onLogout, onSwitchDemo, onOpenAI, theme, onToggleTheme }) {
   const [showRoleMenu, setShowRoleMenu] = useState(false)
 
   const roleColors = {
@@ -50,6 +50,17 @@ export function Header({ user, onLogout, onSwitchDemo, onOpenAI }) {
           >
             <Bot className="h-4 w-4 text-cyan-400 animate-pulse" />
             <span>AI Assistant</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            className="flex h-9 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition"
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <span className="hidden sm:inline">{theme === 'dark' ? 'Dark' : 'Light'}</span>
           </button>
 
           {/* Quick Demo Switcher */}

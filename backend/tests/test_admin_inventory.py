@@ -17,7 +17,7 @@ def test_admin_model_example_data_shapes():
         name="City Health Center",
         code="CHC-01",
         address="123 Wellness Ave",
-        phone="555-0101",
+        phone="+91 98765 43210",
         email="info@cityhealth.example",
         contact_person="Dr. Smith",
     )

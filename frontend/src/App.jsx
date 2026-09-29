@@ -12,6 +12,12 @@ export function App() {
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState('')
   const [showAI, setShowAI] = useState(false)
+  const [theme, setTheme] = useState(() => localStorage.getItem('vextracker_theme') || 'light')
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('vextracker_theme', theme)
+  }, [theme])
 
   // Verify stored session on boot
   useEffect(() => {
@@ -90,6 +96,8 @@ export function App() {
         onRegister={handleRegister}
         loading={loading}
         error={authError}
+        theme={theme}
+        onToggleTheme={() => setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))}
       />
     )
   }
@@ -101,6 +109,8 @@ export function App() {
         onLogout={handleLogout}
         onSwitchDemo={handleSwitchDemo}
         onOpenAI={() => setShowAI(true)}
+        theme={theme}
+        onToggleTheme={() => setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))}
       />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
