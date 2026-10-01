@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Baby,
   Calendar,
@@ -24,6 +24,9 @@ export function ParentDashboard({ onOpenAI }) {
   const [timeline, setTimeline] = useState([])
   const [reminders, setReminders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [detailsError, setDetailsError] = useState('')
   const [statusMsg, setStatusMsg] = useState('')
   const [activeTab, setActiveTab] = useState('timeline') // 'timeline' | 'reminders'
   const [filterStatus, setFilterStatus] = useState('all') // 'all' | 'Completed' | 'Upcoming' | 'Overdue'
@@ -31,37 +34,63 @@ export function ParentDashboard({ onOpenAI }) {
   const [showPassModal, setShowPassModal] = useState(false)
   const [showAddChildModal, setShowAddChildModal] = useState(false)
   const [simulatingAlert, setSimulatingAlert] = useState(false)
+  const childDetailsRequest = useRef(0)
 
   const selectedChild = children.find((c) => c.id === selectedChildId) || children[0] || null
 
   const loadData = async () => {
     try {
       setLoading(true)
+      setLoadError('')
       const data = await api.getChildren()
+      if (!Array.isArray(data)) throw new Error('The server returned an invalid child list.')
       setChildren(data)
       if (data.length > 0) {
-        const activeId = selectedChildId || data[0].id
+        const activeId = data.some((child) => child.id === selectedChildId) ? selectedChildId : data[0].id
         setSelectedChildId(activeId)
         await loadChildDetails(activeId)
+      } else {
+        setSelectedChildId('')
+        setTimeline([])
+        setReminders([])
       }
     } catch (err) {
       console.error(err)
+      setLoadError(err.message || 'Could not load child profiles. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   const loadChildDetails = async (childId) => {
-    try {
-      const [tData, rData] = await Promise.all([
-        api.getTimeline(childId).catch(() => ({ items: [] })),
-        api.getReminders(childId).catch(() => ({ reminders: [] })),
-      ])
-      setTimeline(tData.items || [])
-      setReminders(rData.reminders || [])
-    } catch (err) {
-      console.error(err)
+    const requestId = ++childDetailsRequest.current
+    setDetailsLoading(true)
+    setDetailsError('')
+    setTimeline([])
+    setReminders([])
+
+    const [timelineResult, remindersResult] = await Promise.allSettled([
+      api.getTimeline(childId),
+      api.getReminders(childId),
+    ])
+    if (requestId !== childDetailsRequest.current) return
+
+    if (timelineResult.status === 'fulfilled') {
+      setTimeline(timelineResult.value.items || [])
+    } else {
+      console.error(timelineResult.reason)
     }
+    if (remindersResult.status === 'fulfilled') {
+      setReminders(remindersResult.value.reminders || [])
+    } else {
+      console.error(remindersResult.reason)
+    }
+
+    const failedRequests = [timelineResult, remindersResult].filter((result) => result.status === 'rejected')
+    if (failedRequests.length) {
+      setDetailsError('Some child health information could not be loaded.')
+    }
+    setDetailsLoading(false)
   }
 
   useEffect(() => {
@@ -172,6 +201,28 @@ export function ParentDashboard({ onOpenAI }) {
           </button>
         </div>
       </div>
+
+      {loading && children.length === 0 && (
+        <p role="status" className="text-sm text-slate-400">Loading child profiles...</p>
+      )}
+      {loadError && (
+        <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <span>{loadError}</span>
+          <button onClick={loadData} className="shrink-0 font-semibold text-rose-100 underline">Retry</button>
+        </div>
+      )}
+      {!loading && !loadError && children.length === 0 && (
+        <p className="text-sm text-slate-400">No child profiles yet. Enroll a child to get started.</p>
+      )}
+      {selectedChild && detailsLoading && (
+        <p role="status" className="text-sm text-slate-400">Loading {selectedChild.first_name}'s health information...</p>
+      )}
+      {selectedChild && detailsError && (
+        <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          <span>{detailsError}</span>
+          <button onClick={() => loadChildDetails(selectedChild.id)} className="shrink-0 font-semibold text-amber-100 underline">Retry</button>
+        </div>
+      )}
 
       {selectedChild && (
         <>
@@ -298,7 +349,11 @@ export function ParentDashboard({ onOpenAI }) {
           {/* TAB 1: TIMELINE */}
           {activeTab === 'timeline' && (
             <div className="space-y-3">
-              {filteredTimeline.length === 0 ? (
+              {detailsLoading ? (
+                <div role="status" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center text-slate-400">
+                  Loading vaccination schedule...
+                </div>
+              ) : filteredTimeline.length === 0 ? (
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center text-slate-400">
                   <Calendar className="mx-auto h-8 w-8 text-slate-600 mb-2" />
                   <p>No vaccines match the selected filter.</p>
@@ -390,7 +445,11 @@ export function ParentDashboard({ onOpenAI }) {
                 </p>
               </div>
 
-              {reminders.length === 0 ? (
+              {detailsLoading ? (
+                <div role="status" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center text-slate-400">
+                  Loading reminders...
+                </div>
+              ) : reminders.length === 0 ? (
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center text-slate-400">
                   <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-400 mb-2" />
                   <p>All scheduled vaccines are up to date! No pending alerts.</p>
