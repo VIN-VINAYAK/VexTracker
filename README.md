@@ -84,3 +84,17 @@ npm install
 npm run dev
 ```
 Runs at `http://localhost:5173`.
+
+## ☁️ Deploying to Vercel
+
+The root [`vercel.json`](./vercel.json) configures a single Vercel project with two services:
+
+- `frontend` builds the Vite app from `frontend/` and serves public page requests.
+- `backend` runs FastAPI from `backend/` and receives public `/api/*` requests.
+
+The frontend calls the backend through the same-origin `/api` path. The backend exposes its routes under `/api` as well, so no service binding is needed: this is a browser request through the public rewrite, not a server-to-server call. To deploy, import the repository as one Vercel project and configure these backend environment variables in the project settings:
+
+- `MONGODB_URI` — connection string for a reachable MongoDB deployment.
+- `JWT_SECRET` — a strong, unique signing secret.
+- `MONGODB_DB_NAME` — optional; defaults to `vextracker`.
+- `GROQ_API_KEY` and `GROQ_MODEL` — optional AI integration settings.

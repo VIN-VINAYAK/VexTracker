@@ -32,13 +32,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(auth_router)
-app.include_router(parent_router)
-app.include_router(ai_router)
-app.include_router(doctor_router)
-app.include_router(admin_router)
+app.include_router(auth_router, prefix="/api")
+app.include_router(parent_router, prefix="/api")
+app.include_router(ai_router, prefix="/api")
+app.include_router(doctor_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 
 @app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
